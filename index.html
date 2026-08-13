@@ -9,6 +9,7 @@
     body { font-family: system-ui, sans-serif; background: #1e293b; color: white; padding: 15px; margin: 0; }
     h2 { color: #38bdf8; text-align: center; margin-top: 10px; margin-bottom: 8px; }
     h3 { margin-top: 25px; }
+
     .rate-box {
       background: #0f172a; padding: 10px; border-radius: 8px;
       text-align: center; margin-bottom: 15px; border: 1px solid #38bdf8;
@@ -20,9 +21,28 @@
       text-align: center; font-weight: bold; background: #334155;
       color: #38bdf8; border: 1px solid #38bdf8 !important;
     }
-    input { width: 100%; padding: 12px; margin: 6px 0; border-radius: 8px; border: none; box-sizing: border-box; font-size: 15px; }
+
+    input[type="text"], input[type="number"] {
+      width: 100%; padding: 12px; margin: 6px 0; border-radius: 8px;
+      border: none; box-sizing: border-box; font-size: 15px;
+      background: #334155; color: white;
+    }
+
+    .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0; }
+    .price-box { background: #334155; border-radius: 8px; padding: 10px 12px; }
+    .price-box label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px; }
+    .price-box input {
+      width: 100%; background: transparent; border: none;
+      border-bottom: 1px solid #475569; color: white; font-size: 16px;
+      font-weight: bold; padding: 4px 0; margin: 0; border-radius: 0;
+    }
+    .price-box input:focus { outline: none; border-bottom-color: #38bdf8; }
+
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    button { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; background: #0284c7; color: white; font-size: 14px; }
+    button {
+      padding: 12px; border-radius: 8px; border: none; cursor: pointer;
+      font-weight: bold; background: #0284c7; color: white; font-size: 14px;
+    }
     button:disabled { opacity: 0.5; cursor: default; }
     .btn-camera { background: #0284c7; font-size: 16px; padding: 14px; width: 100%; margin-bottom: 6px; }
     .btn-gallery { background: #334155; font-size: 15px; padding: 12px; width: 100%; margin-bottom: 10px; border: 1px solid #475569; }
@@ -30,30 +50,91 @@
     .btn-save { background: #059669; }
     .btn-export { background: #7c3aed; }
     .btn-import { background: #475569; }
-    #previewBox { display: none; background: #0f172a; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; border: 1px solid #334155; }
-    #capturedImage { max-width: 100%; max-height: 250px; border-radius: 6px; }
+
+    #previewBox {
+      display: none; background: #0f172a; padding: 10px; border-radius: 8px;
+      text-align: center; margin-bottom: 15px; border: 1px solid #334155; position: relative;
+    }
+    #capturedImage {
+      max-width: 100%; max-height: 220px; border-radius: 6px;
+      cursor: zoom-in; transition: all 0.2s;
+    }
     #statusText { color: #38bdf8; font-weight: bold; margin-top: 8px; font-size: 14px; }
+
+    .zoom-btn {
+      position: absolute; top: 14px; right: 14px;
+      background: rgba(0,0,0,0.6); color: white; border: none;
+      border-radius: 6px; padding: 6px 10px; font-size: 18px;
+      cursor: pointer; z-index: 10;
+    }
+
+    /* Nagyítós modal */
+    #imageModal {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%; background: rgba(0,0,0,0.92);
+      z-index: 1000; justify-content: center; align-items: center;
+      flex-direction: column;
+    }
+    #imageModal.open { display: flex; }
+    #modalImg {
+      max-width: 96vw; max-height: 80vh;
+      border-radius: 8px; object-fit: contain;
+      transition: transform 0.2s;
+      touch-action: none;
+    }
+    .modal-controls {
+      display: flex; gap: 12px; margin-top: 14px; align-items: center;
+    }
+    .modal-btn {
+      background: #334155; color: white; border: none; border-radius: 8px;
+      padding: 10px 18px; font-size: 20px; cursor: pointer; font-weight: bold;
+    }
+    .modal-btn.close-btn { background: #ef4444; font-size: 16px; padding: 10px 20px; }
+    #zoomLevel {
+      color: #94a3b8; font-size: 14px; min-width: 50px; text-align: center;
+    }
+
+    .lens-steps {
+      background: #1e3a5f; border-radius: 8px; padding: 10px 12px;
+      margin-top: 8px; font-size: 13px; color: #93c5fd; line-height: 1.8; text-align: left;
+    }
+
     .list-item { background: #334155; padding: 12px; margin-top: 10px; border-radius: 8px; }
     .list-item.sold { opacity: 0.55; }
     .item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .item-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+    .item-thumb {
+      width: 52px; height: 52px; object-fit: cover; border-radius: 6px;
+      flex-shrink: 0; cursor: zoom-in;
+    }
+    .item-thumb-empty { width: 52px; height: 52px; border-radius: 6px; flex-shrink: 0; background: #1e293b; }
     .item-info { flex: 1; min-width: 0; }
-    .item-info b { display: block; word-break: break-word; }
-    .item-price { font-size: 13px; color: #cbd5e1; }
-    .sold-tag { display: inline-block; background: #059669; color: white; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-    .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .item-info b { display: block; word-break: break-word; font-size: 15px; }
+    .item-price-ft { font-size: 14px; color: #e2e8f0; font-weight: bold; }
+    .item-price-eur { font-size: 12px; color: #94a3b8; }
+    .sold-tag {
+      display: inline-block; background: #059669; color: white;
+      font-size: 11px; padding: 2px 6px; border-radius: 4px;
+      margin-left: 6px; vertical-align: middle;
+    }
+    .item-actions { display: flex; gap: 6px; flex-shrink: 0; flex-direction: column; }
     .icon-btn { padding: 6px 10px; font-size: 12px; border-radius: 6px; }
     .icon-btn.edit { background: #f59e0b; }
-    .icon-btn.sold { background: #059669; }
+    .icon-btn.sold-btn { background: #059669; }
     .icon-btn.del { background: #ef4444; }
+
     .top-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; margin-bottom: 6px; }
     #importFile { display: none; }
     .filter-row { display: flex; gap: 8px; margin-top: 12px; }
     .filter-row button { flex: 1; background: #334155; font-size: 13px; padding: 8px; }
     .filter-row button.active { background: #0284c7; }
     .empty-hint { color: #94a3b8; text-align: center; margin-top: 15px; font-size: 14px; }
-    .lens-hint { color: #94a3b8; font-size: 12px; margin-top: 6px; line-height: 1.5; }
-    .hint-box { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 13px; color: #94a3b8; line-height: 1.6; }
+
+    .hint-box {
+      background: #0f172a; border: 1px solid #334155; border-radius: 8px;
+      padding: 10px 12px; margin-bottom: 14px; font-size: 13px;
+      color: #94a3b8; line-height: 1.7;
+    }
+    .hint-box b { color: #e2e8f0; }
   </style>
 </head>
 <body>
@@ -67,11 +148,11 @@
 </div>
 
 <div class="hint-box">
-  📌 <b>Hogyan használd:</b><br>
-  1. Fotózd le a szerszámot / címkét<br>
-  2. Nyomd meg a <b style="color:#ea4335;">🔎 Google Lens</b> gombot<br>
-  3. A Lens megmutatja a típust → másold be a névmezőbe<br>
-  4. Add meg az árat, keresd meg a piaci árat, majd mentsd el
+  <b>📌 Hogyan használd:</b><br>
+  1. Fotózd le a szerszámot / típuscímkét<br>
+  2. Nyomd meg: <b style="color:#ea4335;">🔎 Google Lens megnyitása</b><br>
+  3. A Lens-ben töltsd fel a képet → felismeri a típust<br>
+  4. Másold be a típust, add meg az árat → 💾 Mentés
 </div>
 
 <button class="btn-camera" onclick="openCamera()">📷 Fotó készítése (Kamera)</button>
@@ -81,19 +162,42 @@
 <input type="file" id="galleryInput" accept="image/*" style="display:none;" onchange="handlePhoto(event)">
 
 <div id="previewBox">
-  <img id="capturedImage" src="" alt="Előnézet">
+  <button class="zoom-btn" onclick="openModal()">🔍</button>
+  <img id="capturedImage" src="" alt="Előnézet" onclick="openModal()">
   <div id="statusText"></div>
+  <button class="btn-lens" onclick="openGoogleLens()">🔎 Google Lens megnyitása (típus felismerés)</button>
+  <div class="lens-steps">
+    <b>Mit csinálj a Lens-ben:</b><br>
+    1. A Lens megnyílik → kattints a 🖼️ ikonra (kép feltöltése)<br>
+    2. Válaszd ki a galériából az imént készített képet<br>
+    3. A Lens megmutatja a szerszám típusát<br>
+    4. Másold be ide lentebb a névmezőbe ⬇️
+  </div>
+</div>
 
-  <button class="btn-lens" onclick="openGoogleLens()">🔎 Megnyitás Google Lens-ben → típus felismerés</button>
-  <div class="lens-hint">
-    ⬆️ Ez megnyitja a Google Lens-t a képpel.<br>
-    A Lens megmutatja a szerszám típusát — másold be lentebb a névmezőbe.
+<!-- Nagyítós modal -->
+<div id="imageModal" onclick="closeModalOutside(event)">
+  <img id="modalImg" src="" alt="Nagyított kép">
+  <div class="modal-controls">
+    <button class="modal-btn" onclick="zoomOut()">➖</button>
+    <span id="zoomLevel">100%</span>
+    <button class="modal-btn" onclick="zoomIn()">➕</button>
+    <button class="modal-btn close-btn" onclick="closeModal()">✕ Bezár</button>
   </div>
 </div>
 
 <input type="text" id="itemName" placeholder="Gép neve / modellje (Google Lens után írd be)">
-<input type="number" id="itemPrice" placeholder="Tervezett eladási ár (Ft)" oninput="updatePriceEurHint()">
-<div id="priceEurHint" style="color:#94a3b8; font-size:13px; margin-top:-4px; margin-bottom:6px; display:none;"></div>
+
+<div class="price-row">
+  <div class="price-box">
+    <label>💰 Eladási ár (Ft)</label>
+    <input type="number" id="itemPriceFt" placeholder="pl. 15000" oninput="syncPrices('ft')">
+  </div>
+  <div class="price-box">
+    <label>💶 Eladási ár (€)</label>
+    <input type="number" id="itemPriceEur" placeholder="pl. 37" oninput="syncPrices('eur')">
+  </div>
+</div>
 
 <div class="btn-row">
   <button onclick="search('jofogas')">🔍 Jófogás</button>
@@ -121,13 +225,14 @@
   let currentEurRate = parseFloat(localStorage.getItem('savedEurRate')) || 400;
   let currentFilter = 'all';
   let pendingPhotoData = null;
-  let lastPhotoBlob = null;
   let editingIndex = null;
+  let currentZoom = 1;
 
   document.getElementById('eurRateInput').value = currentEurRate;
   renderList();
   initExchangeRate();
 
+  // ── Árfolyam ──────────────────────────────────────────
   async function initExchangeRate() {
     if (!localStorage.getItem('savedEurRate')) {
       try {
@@ -149,14 +254,27 @@
       localStorage.setItem('savedEurRate', v);
     }
     renderList();
-    updatePriceEurHint();
   }
 
+  // ── Ár szinkron ───────────────────────────────────────
+  function syncPrices(source) {
+    if (currentEurRate <= 0) return;
+    if (source === 'ft') {
+      const ft = parseFloat(document.getElementById('itemPriceFt').value);
+      document.getElementById('itemPriceEur').value = (!isNaN(ft) && ft > 0)
+        ? Math.round(ft / currentEurRate) : '';
+    } else {
+      const eur = parseFloat(document.getElementById('itemPriceEur').value);
+      document.getElementById('itemPriceFt').value = (!isNaN(eur) && eur > 0)
+        ? Math.round(eur * currentEurRate) : '';
+    }
+  }
+
+  // ── Fotó ──────────────────────────────────────────────
   function openCamera() {
     document.getElementById('cameraInput').value = '';
     document.getElementById('cameraInput').click();
   }
-
   function openGallery() {
     document.getElementById('galleryInput').value = '';
     document.getElementById('galleryInput').click();
@@ -167,13 +285,8 @@
       const img = new Image();
       img.onload = () => {
         let { width, height } = img;
-        if (width > height && width > maxDim) {
-          height = Math.round(height * maxDim / width);
-          width = maxDim;
-        } else if (height > maxDim) {
-          width = Math.round(width * maxDim / height);
-          height = maxDim;
-        }
+        if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
         const c = document.createElement('canvas');
         c.width = width; c.height = height;
         c.getContext('2d').drawImage(img, 0, 0, width, height);
@@ -187,171 +300,120 @@
   async function handlePhoto(event) {
     const file = event.target.files[0];
     if (!file) return;
-
-    // blob mentése Lens-hez
-    lastPhotoBlob = file;
-
     const reader = new FileReader();
     reader.onload = async function(e) {
       document.getElementById('capturedImage').src = e.target.result;
+      document.getElementById('modalImg').src = e.target.result;
       document.getElementById('previewBox').style.display = 'block';
-      document.getElementById('statusText').innerText = "✅ Fotó betöltve! Nyomd meg a Google Lens gombot a típus felismeréséhez.";
+      document.getElementById('statusText').innerText = "✅ Fotó betöltve! Nyomd meg a Google Lens gombot, vagy kattints a képre a nagyításhoz.";
       pendingPhotoData = await makeThumbnail(e.target.result);
     };
     reader.readAsDataURL(file);
   }
 
-  // Google Lens közvetlen megnyitás:
-  // A lens.google.com/upload végpontra POST-oljuk a képet,
-  // és az eredményt új tabban nyitjuk meg.
-  async function openGoogleLens() {
-    if (!lastPhotoBlob) {
-      alert("Előbb készíts vagy tölts fel egy fotót!");
-      return;
-    }
-
-    document.getElementById('statusText').innerText = "⏳ Feltöltés a Google Lens-be...";
-
-    try {
-      // Form data összeállítása
-      const formData = new FormData();
-      formData.append('encoded_image', lastPhotoBlob, 'photo.jpg');
-      formData.append('image_content', '');
-
-      // Google Lens upload endpoint
-      const lensUrl = 'https://lens.google.com/upload?hl=hu&re=df&st=' + Date.now() + '&ep=gisbubu';
-
-      // Új tab nyitása és form submit
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = lensUrl;
-      form.enctype = 'multipart/form-data';
-      form.target = '_blank';
-      form.style.display = 'none';
-
-      // Fájlt nem lehet közvetlenül form hidden fieldbe tenni,
-      // ezért a képet base64-ként küldjük át egy közvetítő oldalon keresztül
-      // Alternatíva: object URL + lens URL séma
-
-      // Legjobb megoldás mobilon: intent URL Android-on
-      const isAndroid = /android/i.test(navigator.userAgent);
-      const isIOS = /iphone|ipad/i.test(navigator.userAgent);
-
-      if (isAndroid) {
-        // Android: Google Lens intent
-        // Blob URL létrehozása
-        const blobUrl = URL.createObjectURL(lastPhotoBlob);
-        // Lens intent megnyitása
-        const intentUrl = `intent://lens.google.com/upload?hl=hu#Intent;scheme=https;package=com.google.android.googlequicksearchbox;end`;
-        window.location.href = intentUrl;
-        // Fallback: Google Lens web upload
-        setTimeout(() => {
-          openLensWebFallback();
-        }, 1500);
-      } else {
-        // iOS és desktop: web alapú megoldás
-        openLensWebFallback();
-      }
-
-    } catch(err) {
-      document.getElementById('statusText').innerText = "⚠️ Hiba. Próbáld a kézi módszert.";
-      openLensWebFallback();
-    }
+  // ── Nagyítós modal ────────────────────────────────────
+  function openModal() {
+    currentZoom = 1;
+    applyZoom();
+    document.getElementById('imageModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
-  function openLensWebFallback() {
-    // Legjobb elérhető megoldás: form POST a Google Lens upload végpontra
-    // A képet Blob URL-ként adjuk át
-    const blobUrl = URL.createObjectURL(lastPhotoBlob);
-
-    // Közvetítő HTML oldal memóriában, ami elvégzi a POST-ot
-    const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>Google Lens...</title></head>
-<body style="background:#1e293b;color:white;font-family:sans-serif;padding:20px;">
-<h3>⏳ Átirányítás a Google Lens-be...</h3>
-<p>Ha nem nyílik meg automatikusan, kattints a gombra:</p>
-<form id="f" method="POST" action="https://lens.google.com/upload?hl=hu&re=df&ep=gisbubu" enctype="multipart/form-data">
-  <input type="hidden" name="image_url" value="">
-  <input type="file" name="encoded_image" id="fi" style="display:none">
-  <button type="submit" style="background:#ea4335;color:white;padding:12px 24px;border:none;border-radius:8px;font-size:16px;cursor:pointer;">
-    🔎 Megnyitás Google Lens-ben
-  </button>
-</form>
-<script>
-  // Auto submit
-  document.getElementById('f').submit();
-<\/script>
-</body>
-</html>`;
-
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, '_blank');
-
-    if (!win) {
-      // Popup blocker esetén
-      document.getElementById('statusText').innerText = "⚠️ Popup blokkolva! Engedélyezd a felugró ablakokat, vagy használd a Google Lens appot.";
-    } else {
-      document.getElementById('statusText').innerText = "✅ Google Lens megnyitva! Másold be a felismert típust a névmezőbe.";
-    }
+  function closeModal() {
+    document.getElementById('imageModal').classList.remove('open');
+    document.body.style.overflow = '';
   }
 
-  function updatePriceEurHint() {
-    const priceFt = document.getElementById('itemPrice').value;
-    const hint = document.getElementById('priceEurHint');
-    if (priceFt && !isNaN(priceFt) && currentEurRate > 0) {
-      const eur = Math.round(priceFt / currentEurRate);
-      hint.innerText = `≈ ${eur} €`;
-      hint.style.display = 'block';
-    } else {
-      hint.style.display = 'none';
-    }
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('imageModal')) closeModal();
   }
 
+  function zoomIn() {
+    currentZoom = Math.min(currentZoom + 0.25, 4);
+    applyZoom();
+  }
+
+  function zoomOut() {
+    currentZoom = Math.max(currentZoom - 0.25, 0.5);
+    applyZoom();
+  }
+
+  function applyZoom() {
+    document.getElementById('modalImg').style.transform = `scale(${currentZoom})`;
+    document.getElementById('zoomLevel').innerText = Math.round(currentZoom * 100) + '%';
+  }
+
+  // Lista elemek képének nagyítása
+  function openModalWithSrc(src) {
+    document.getElementById('modalImg').src = src;
+    openModal();
+  }
+
+  // ── Google Lens ───────────────────────────────────────
+  function openGoogleLens() {
+    window.open('https://lens.google.com/', '_blank');
+    document.getElementById('statusText').innerText =
+      "🔎 Google Lens megnyílt! Töltsd fel ott a képet, másold ide a típust.";
+  }
+
+  // ── Keresés ───────────────────────────────────────────
   function search(type) {
     const name = document.getElementById('itemName').value;
     if (!name) return alert("Írd be a gép nevét!");
     let url = "";
     if (type === 'jofogas') url = "https://www.jofogas.hu/magyarorszag?q=" + encodeURIComponent(name);
-    if (type === 'bazos') url = "https://www.bazos.sk/search.php?hledat=" + encodeURIComponent(name);
-    if (type === 'google') url = "https://www.google.com/search?q=" + encodeURIComponent(name + " eladó ár");
+    if (type === 'bazos')   url = "https://www.bazos.sk/search.php?hledat=" + encodeURIComponent(name);
+    if (type === 'google')  url = "https://www.google.com/search?q=" + encodeURIComponent(name + " eladó ár");
     window.open(url, '_blank');
   }
 
+  // ── LocalStorage ─────────────────────────────────────
   function getItems() { return JSON.parse(localStorage.getItem('myTools') || "[]"); }
   function setItems(items) { localStorage.setItem('myTools', JSON.stringify(items)); }
 
+  // ── Mentés ────────────────────────────────────────────
   function saveItem() {
     const name = document.getElementById('itemName').value.trim();
-    const priceFt = document.getElementById('itemPrice').value;
+    const priceFt  = document.getElementById('itemPriceFt').value;
+    const priceEur = document.getElementById('itemPriceEur').value;
     if (!name) return alert("Írd be a gép nevét!");
+
     const items = getItems();
+    const entry = {
+      name,
+      priceFt:  priceFt  || "?",
+      priceEur: priceEur || "?",
+      sold: false,
+      photo: pendingPhotoData || null
+    };
+
     if (editingIndex !== null) {
-      const ex = items[editingIndex];
-      items[editingIndex] = { ...ex, name, priceFt: priceFt || "?", photo: pendingPhotoData || ex.photo || null };
+      entry.sold  = items[editingIndex].sold;
+      entry.photo = pendingPhotoData || items[editingIndex].photo || null;
+      items[editingIndex] = entry;
       editingIndex = null;
       document.querySelector('.btn-save').innerText = "💾 Mentés";
     } else {
-      items.push({ name, priceFt: priceFt || "?", sold: false, photo: pendingPhotoData || null });
+      items.push(entry);
     }
+
     setItems(items);
     renderList();
     document.getElementById('itemName').value = "";
-    document.getElementById('itemPrice').value = "";
+    document.getElementById('itemPriceFt').value = "";
+    document.getElementById('itemPriceEur').value = "";
     document.getElementById('previewBox').style.display = 'none';
     pendingPhotoData = null;
-    lastPhotoBlob = null;
-    updatePriceEurHint();
   }
 
+  // ── Szerkesztés ───────────────────────────────────────
   function editItem(index) {
     const item = getItems()[index];
     document.getElementById('itemName').value = item.name;
-    document.getElementById('itemPrice').value = item.priceFt === "?" ? "" : item.priceFt;
+    document.getElementById('itemPriceFt').value  = item.priceFt  === "?" ? "" : item.priceFt;
+    document.getElementById('itemPriceEur').value = item.priceEur === "?" ? "" : item.priceEur;
     editingIndex = index;
     document.querySelector('.btn-save').innerText = "💾 Módosítás mentése";
-    updatePriceEurHint();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -367,31 +429,37 @@
     const items = getItems();
     items.splice(index, 1);
     setItems(items);
-    renderList();
     if (editingIndex === index) {
       editingIndex = null;
       document.querySelector('.btn-save').innerText = "💾 Mentés";
     }
+    renderList();
   }
 
+  // ── Szűrő ─────────────────────────────────────────────
   function setFilter(f) {
     currentFilter = f;
-    ['All','Active','Sold'].forEach(k => document.getElementById('filter'+k).classList.remove('active'));
+    ['All','Active','Sold'].forEach(k =>
+      document.getElementById('filter'+k).classList.remove('active')
+    );
     document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
     renderList();
   }
 
+  // ── HTML escape ───────────────────────────────────────
   function escapeHtml(str) {
     const d = document.createElement('div');
     d.textContent = str;
     return d.innerHTML;
   }
 
+  // ── Lista renderelés ──────────────────────────────────
   function renderList() {
     const items = getItems();
     const container = document.getElementById('itemList');
     const emptyHint = document.getElementById('emptyHint');
     container.innerHTML = "";
+
     if (items.length === 0) { emptyHint.style.display = 'block'; return; }
     emptyHint.style.display = 'none';
 
@@ -399,69 +467,45 @@
       .map((item, idx) => ({ item, idx }))
       .filter(({ item }) => {
         if (currentFilter === 'active') return !item.sold;
-        if (currentFilter === 'sold') return !!item.sold;
+        if (currentFilter === 'sold')   return !!item.sold;
         return true;
       })
       .forEach(({ item, idx }) => {
-        let priceDisplay = item.priceFt;
-        if (item.priceFt !== "?" && !isNaN(item.priceFt) && currentEurRate > 0) {
-          priceDisplay = `${item.priceFt} Ft (~${Math.round(item.priceFt / currentEurRate)} €)`;
-        } else if (item.priceFt !== "?") {
-          priceDisplay = `${item.priceFt} Ft`;
+        // Ár megjelenítés — ha régi adat csak priceFt-vel jött, számítsuk az EUR-t
+        let ft  = item.priceFt;
+        let eur = item.priceEur;
+
+        if (ft !== "?" && (!eur || eur === "?") && currentEurRate > 0) {
+          eur = Math.round(parseFloat(ft) / currentEurRate);
+        }
+        if (eur !== "?" && (!ft || ft === "?") && currentEurRate > 0) {
+          ft = Math.round(parseFloat(eur) * currentEurRate);
         }
 
-        const thumb = item.photo
-          ? `<img class="item-thumb" src="${item.photo}" alt="">`
-          : `<div class="item-thumb" style="background:#1e293b;"></div>`;
+        const priceHtml = `
+          <div class="item-price-ft">${ft !== "?" ? ft + ' Ft' : '— Ft'}</div>
+          <div class="item-price-eur">${eur !== "?" ? '≈ ' + eur + ' €' : '— €'}</div>
+        `;
+
+        const thumbHtml = item.photo
+          ? `<img class="item-thumb" src="${item.photo}" alt=""
+               onclick="openModalWithSrc('${item.photo}')" title="Kattints a nagyításhoz">`
+          : `<div class="item-thumb-empty"></div>`;
 
         const soldTag = item.sold ? `<span class="sold-tag">Eladva</span>` : '';
+
         const div = document.createElement('div');
         div.className = 'list-item' + (item.sold ? ' sold' : '');
         div.innerHTML = `
           <div class="item-top">
-            ${thumb}
+            ${thumbHtml}
             <div class="item-info">
               <b>${escapeHtml(item.name)}${soldTag}</b>
-              <span class="item-price">${escapeHtml(String(priceDisplay))}</span>
+              ${priceHtml}
             </div>
             <div class="item-actions">
-              <button class="icon-btn edit" onclick="editItem(${idx})">✏️</button>
-              <button class="icon-btn sold" onclick="toggleSold(${idx})">${item.sold ? '↩️' : '✅'}</button>
-              <button class="icon-btn del" onclick="deleteItem(${idx})">🗑️</button>
+              <button class="icon-btn edit"     onclick="editItem(${idx})">✏️</button>
+              <button class="icon-btn sold-btn" onclick="toggleSold(${idx})">${item.sold ? '↩️' : '✅'}</button>
+              <button class="icon-btn del"      onclick="deleteItem(${idx})">🗑️</button>
             </div>
-          </div>`;
-        container.appendChild(div);
-      });
-  }
-
-  function exportItems() {
-    const blob = new Blob([JSON.stringify(getItems(), null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'szerszamok_' + new Date().toISOString().slice(0,10) + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  function importItems(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      try {
-        const imported = JSON.parse(e.target.result);
-        if (!Array.isArray(imported)) return alert("Érvénytelen fájl!");
-        setItems([...getItems(), ...imported]);
-        renderList();
-        alert(`${imported.length} tétel importálva!`);
-      } catch(err) { alert("Hiba az importáláskor!"); }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-  }
-</script>
-</body>
-</html>
+  
