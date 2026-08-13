@@ -4,18 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Szerszám Eladó Segéd</title>
-  <!-- Automatikus szövegfelismerő kövtár -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
+    * { box-sizing: border-box; }
     body { font-family: system-ui, sans-serif; background: #1e293b; color: white; padding: 15px; margin: 0; }
     h2 { color: #38bdf8; text-align: center; margin-top: 10px; margin-bottom: 8px; }
-    
-    .rate-box { 
-      background: #0f172a; 
-      padding: 10px; 
-      border-radius: 8px; 
-      text-align: center; 
-      margin-bottom: 15px; 
+    h3 { margin-top: 25px; }
+
+    .rate-box {
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 15px;
       border: 1px solid #38bdf8;
       display: flex;
       align-items: center;
@@ -23,11 +24,11 @@
       gap: 8px;
       font-size: 14px;
     }
-    .rate-input { 
-      width: 80px !important; 
-      padding: 6px !important; 
-      margin: 0 !important; 
-      text-align: center; 
+    .rate-input {
+      width: 80px !important;
+      padding: 6px !important;
+      margin: 0 !important;
+      text-align: center;
       font-weight: bold;
       background: #334155;
       color: #38bdf8;
@@ -37,12 +38,44 @@
     input { width: 100%; padding: 12px; margin: 6px 0; border-radius: 8px; border: none; box-sizing: border-box; font-size: 15px; }
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     button { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; background: #0284c7; color: white; font-size: 14px; }
+    button:disabled { opacity: 0.5; cursor: default; }
     .btn-camera { background: #0284c7; font-size: 16px; padding: 14px; width: 100%; margin-bottom: 10px; }
     .btn-save { background: #059669; }
+    .btn-export { background: #7c3aed; }
+    .btn-import { background: #475569; }
+
     #previewBox { display: none; background: #0f172a; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; border: 1px solid #334155; }
     #capturedImage { max-width: 100%; max-height: 250px; border-radius: 6px; }
     #statusText { color: #38bdf8; font-weight: bold; margin-top: 8px; font-size: 14px; }
-    .list-item { background: #334155; padding: 12px; margin-top: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+    .progress-wrap { width: 100%; background: #334155; border-radius: 6px; height: 8px; margin-top: 8px; overflow: hidden; display: none; }
+    .progress-bar { height: 100%; width: 0%; background: #38bdf8; transition: width 0.2s; }
+
+    .list-item { background: #334155; padding: 12px; margin-top: 10px; border-radius: 8px; }
+    .list-item.sold { opacity: 0.55; }
+    .item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .item-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-info b { display: block; word-break: break-word; }
+    .item-price { font-size: 13px; color: #cbd5e1; }
+    .sold-tag { display: inline-block; background: #059669; color: white; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .icon-btn { padding: 6px 10px; font-size: 12px; border-radius: 6px; }
+    .icon-btn.edit { background: #f59e0b; }
+    .icon-btn.sold { background: #059669; }
+    .icon-btn.del { background: #ef4444; }
+
+    .edit-row { display: flex; gap: 6px; margin-top: 8px; }
+    .edit-row input { margin: 0; }
+
+    .top-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; margin-bottom: 6px; }
+    #importFile { display: none; }
+
+    .filter-row { display: flex; gap: 8px; margin-top: 12px; }
+    .filter-row button { flex: 1; background: #334155; font-size: 13px; padding: 8px; }
+    .filter-row button.active { background: #0284c7; }
+
+    .empty-hint { color: #94a3b8; text-align: center; margin-top: 15px; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -61,11 +94,12 @@
   <div id="previewBox">
     <img id="capturedImage" src="" alt="Előnézet">
     <div id="statusText"></div>
+    <div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
   </div>
 
-  <input type="text" id="itemName" placeholder="2. Gép neve/modellje (a fotóból beíródik)">
+  <input type="text" id="itemName" placeholder="2. Gép neve/modellje (a fotóból beíródik — javítható)">
   <input type="number" id="itemPrice" placeholder="3. Tervezett eladási ár (Ft)">
-  
+
   <div class="btn-row">
     <button onclick="search('jofogas')">🔍 Jófogás keresés</button>
     <button onclick="search('bazos')">🔍 Bazos.sk keresés</button>
@@ -73,11 +107,26 @@
     <button class="btn-save" onclick="saveItem()">💾 Mentés a listába</button>
   </div>
 
-  <h3 style="margin-top:25px;">📋 Eladásra váró cuccok:</h3>
+  <div class="top-actions">
+    <button class="btn-export" onclick="exportItems()">⬇️ Exportálás (JSON)</button>
+    <button class="btn-import" onclick="document.getElementById('importFile').click()">⬆️ Importálás</button>
+  </div>
+  <input type="file" id="importFile" accept="application/json" onchange="importItems(event)">
+
+  <h3>📋 Eladásra váró cuccok:</h3>
+  <div class="filter-row">
+    <button id="filterAll" class="active" onclick="setFilter('all')">Összes</button>
+    <button id="filterActive" onclick="setFilter('active')">Eladó</button>
+    <button id="filterSold" onclick="setFilter('sold')">Eladva</button>
+  </div>
   <div id="itemList"></div>
+  <div id="emptyHint" class="empty-hint" style="display:none;">Még nincs semmi a listában. Fotózz vagy adj hozzá egy tételt fent!</div>
 
   <script>
     let currentEurRate = parseFloat(localStorage.getItem('savedEurRate')) || 400;
+    let currentFilter = 'all';
+    let pendingPhotoData = null; // dataURL of the just-taken photo, attached on save
+    let editingIndex = null;
 
     document.getElementById('eurRateInput').value = currentEurRate;
 
@@ -99,101 +148,263 @@
 
     function changeRate(val) {
       const newRate = parseFloat(val);
-      if (newRate && newRate > 0) {
+      if (!isNaN(newRate) && newRate > 0) {
         currentEurRate = newRate;
         localStorage.setItem('savedEurRate', newRate);
-        renderList();
       }
+      // always re-render so a temporarily empty/invalid field doesn't break display
+      renderList();
     }
 
     function openCamera() {
       document.getElementById('cameraInput').click();
     }
 
+    // Resize a dataURL image down to a small thumbnail so localStorage doesn't fill up
+    function makeThumbnail(dataUrl, maxDim = 240, quality = 0.6) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > height && width > maxDim) {
+            height = Math.round(height * (maxDim / width));
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round(width * (maxDim / height));
+            height = maxDim;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(null);
+        img.src = dataUrl;
+      });
+    }
+
     async function handlePhoto(event) {
       const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          document.getElementById('capturedImage').src = e.target.result;
-          document.getElementById('previewBox').style.display = 'block';
-          
-          const status = document.getElementById('statusText');
-          status.innerText = "⏳ Szöveg olvasása a fotóról...";
+      if (!file) return;
 
-          try {
-            // Fotó automatikus szövegelemzése
-            const result = await Tesseract.recognize(e.target.result, 'eng');
-            const detectedText = result.data.text.trim().replace(/\n+/g, ' ');
+      const reader = new FileReader();
+      reader.onload = async function (e) {
+        document.getElementById('capturedImage').src = e.target.result;
+        document.getElementById('previewBox').style.display = 'block';
 
-            if (detectedText.length > 0) {
-              document.getElementById('itemName').value = detectedText;
-              status.innerText = "✅ Típus automatikusan beírva!";
-            } else {
-              status.innerText = "⚠️ Nem sikerült kiolvasni, kérlek igazítsd meg a fotót.";
+        const status = document.getElementById('statusText');
+        const progressWrap = document.getElementById('progressWrap');
+        const progressBar = document.getElementById('progressBar');
+        status.innerText = "⏳ Szöveg olvasása a fotóról...";
+        progressWrap.style.display = 'block';
+        progressBar.style.width = '0%';
+
+        // store a compressed thumbnail to attach to the item on save
+        pendingPhotoData = await makeThumbnail(e.target.result);
+
+        try {
+          const result = await Tesseract.recognize(e.target.result, 'hun+eng', {
+            logger: (m) => {
+              if (m.status === 'recognizing text' && m.progress != null) {
+                progressBar.style.width = Math.round(m.progress * 100) + '%';
+              }
             }
-          } catch (err) {
-            status.innerText = "⚠️ Hiba a beolvasáskor.";
+          });
+          const detectedText = result.data.text.trim().replace(/\s+/g, ' ');
+
+          if (detectedText.length > 0) {
+            document.getElementById('itemName').value = detectedText;
+            status.innerText = "✅ Szöveg beírva — ellenőrizd, javítsd ha kell!";
+          } else {
+            status.innerText = "⚠️ Nem sikerült kiolvasni, írd be kézzel.";
           }
-        };
-        reader.readAsDataURL(file);
-      }
+        } catch (err) {
+          status.innerText = "⚠️ Hiba a beolvasáskor, írd be kézzel.";
+        } finally {
+          progressWrap.style.display = 'none';
+        }
+      };
+      reader.readAsDataURL(file);
     }
 
     function search(type) {
       const name = document.getElementById('itemName').value;
       if (!name) return alert("Kérlek írd be vagy fotózd le a gép nevét!");
-      
+
       let url = "";
       if (type === 'jofogas') url = "https://www.jofogas.hu/magyarorszag?q=" + encodeURIComponent(name);
       if (type === 'bazos') url = "https://www.bazos.sk/search.php?hledat=" + encodeURIComponent(name);
       if (type === 'google') url = "https://www.google.com/search?q=" + encodeURIComponent(name + " eladó ár");
-      
+
       window.open(url, '_blank');
     }
 
+    function getItems() {
+      return JSON.parse(localStorage.getItem('myTools') || "[]");
+    }
+    function setItems(items) {
+      localStorage.setItem('myTools', JSON.stringify(items));
+    }
+
     function saveItem() {
-      const name = document.getElementById('itemName').value;
+      const name = document.getElementById('itemName').value.trim();
       const priceFt = document.getElementById('itemPrice').value;
       if (!name) return alert("Írd be a gép nevét!");
 
-      const items = JSON.parse(localStorage.getItem('myTools') || "[]");
-      items.push({ name: name, priceFt: priceFt || "?" });
-      localStorage.setItem('myTools', JSON.stringify(items));
+      const items = getItems();
+
+      if (editingIndex !== null) {
+        // update existing item, keep its photo/sold state unless a new photo was taken
+        const existing = items[editingIndex];
+        items[editingIndex] = {
+          ...existing,
+          name: name,
+          priceFt: priceFt || "?",
+          photo: pendingPhotoData || existing.photo || null
+        };
+        editingIndex = null;
+        document.querySelector('.btn-save').innerText = "💾 Mentés a listába";
+      } else {
+        items.push({ name: name, priceFt: priceFt || "?", sold: false, photo: pendingPhotoData || null });
+      }
+
+      setItems(items);
       renderList();
-      
+
       document.getElementById('itemName').value = "";
       document.getElementById('itemPrice').value = "";
       document.getElementById('previewBox').style.display = 'none';
+      pendingPhotoData = null;
+    }
+
+    function editItem(index) {
+      const items = getItems();
+      const item = items[index];
+      document.getElementById('itemName').value = item.name;
+      document.getElementById('itemPrice').value = item.priceFt === "?" ? "" : item.priceFt;
+      editingIndex = index;
+      document.querySelector('.btn-save').innerText = "💾 Módosítás mentése";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleSold(index) {
+      const items = getItems();
+      items[index].sold = !items[index].sold;
+      setItems(items);
+      renderList();
+    }
+
+    function deleteItem(index) {
+      const items = getItems();
+      items.splice(index, 1);
+      setItems(items);
+      renderList();
+      if (editingIndex === index) {
+        editingIndex = null;
+        document.querySelector('.btn-save').innerText = "💾 Mentés a listába";
+      }
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      ['All', 'Active', 'Sold'].forEach(k => document.getElementById('filter' + k).classList.remove('active'));
+      document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
+      renderList();
     }
 
     function renderList() {
-      const items = JSON.parse(localStorage.getItem('myTools') || "[]");
+      const items = getItems();
       const container = document.getElementById('itemList');
+      const emptyHint = document.getElementById('emptyHint');
       container.innerHTML = "";
-      items.forEach((item, index) => {
+
+      const filtered = items
+        .map((item, idx) => ({ item, idx }))
+        .filter(({ item }) => {
+          if (currentFilter === 'active') return !item.sold;
+          if (currentFilter === 'sold') return !!item.sold;
+          return true;
+        });
+
+      if (items.length === 0) {
+        emptyHint.style.display = 'block';
+        return;
+      }
+      emptyHint.style.display = 'none';
+
+      filtered.forEach(({ item, idx }) => {
         let priceDisplay = item.priceFt;
-        
-        if (item.priceFt !== "?" && !isNaN(item.priceFt)) {
+        if (item.priceFt !== "?" && !isNaN(item.priceFt) && currentEurRate > 0) {
           const eur = Math.round(item.priceFt / currentEurRate);
           priceDisplay = `${item.priceFt} Ft (~${eur} €)`;
         } else if (item.priceFt !== "?") {
           priceDisplay = `${item.priceFt} Ft`;
         }
 
-        container.innerHTML += `
-          <div class="list-item">
-            <span><b>${item.name}</b> — ${priceDisplay}</span>
-            <button onclick="deleteItem(${index})" style="background:#ef4444; padding:6px 10px; font-size:12px;">X</button>
-          </div>`;
+        const thumb = item.photo
+          ? `<img class="item-thumb" src="${item.photo}" alt="">`
+          : `<div class="item-thumb" style="background:#1e293b;"></div>`;
+
+        const soldTag = item.sold ? `<span class="sold-tag">Eladva</span>` : '';
+
+        const div = document.createElement('div');
+        div.className = 'list-item' + (item.sold ? ' sold' : '');
+        div.innerHTML = `
+          <div class="item-top">
+            ${thumb}
+            <div class="item-info">
+              <b>${escapeHtml(item.name)}${soldTag}</b>
+              <span class="item-price">${escapeHtml(String(priceDisplay))}</span>
+            </div>
+            <div class="item-actions">
+              <button class="icon-btn edit" onclick="editItem(${idx})">✏️</button>
+              <button class="icon-btn sold" onclick="toggleSold(${idx})">${item.sold ? '↩️' : '✅'}</button>
+              <button class="icon-btn del" onclick="deleteItem(${idx})">🗑️</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
       });
     }
 
-    function deleteItem(index) {
-      const items = JSON.parse(localStorage.getItem('myTools') || "[]");
-      items.splice(index, 1);
-      localStorage.setItem('myTools', JSON.stringify(items));
-      renderList();
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function exportItems() {
+      const items = getItems();
+      const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'szerszamok_' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importItems(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!Array.isArray(imported)) throw new Error('invalid');
+          const existing = getItems();
+          setItems(existing.concat(imported));
+          renderList();
+          alert(`${imported.length} tétel importálva.`);
+        } catch (err) {
+          alert('A fájl nem érvényes JSON lista.');
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
     }
 
     initExchangeRate();
@@ -201,4 +412,3 @@
   </script>
 </body>
 </html>
-
