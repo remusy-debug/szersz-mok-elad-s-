@@ -40,6 +40,8 @@
     button { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; background: #0284c7; color: white; font-size: 14px; }
     button:disabled { opacity: 0.5; cursor: default; }
     .btn-camera { background: #0284c7; font-size: 16px; padding: 14px; width: 100%; margin-bottom: 10px; }
+    .btn-gallery { background: #334155; font-size: 15px; padding: 12px; width: 100%; margin-bottom: 10px; border: 1px solid #475569; }
+    .btn-lens { background: #ea4335; font-size: 14px; padding: 10px; width: 100%; margin-top: 8px; }
     .btn-save { background: #059669; }
     .btn-export { background: #7c3aed; }
     .btn-import { background: #475569; }
@@ -89,16 +91,24 @@
   </div>
 
   <button class="btn-camera" onclick="openCamera()">📷 1. Fotó készítése (Kamera)</button>
+  <div style="color:#94a3b8; font-size:12px; text-align:center; margin-top:-4px; margin-bottom:10px;">
+    Tipp: fényképezd a címkét szemből, egyenesen, közelről, jó fényben — így a szövegfelismerés sokkal pontosabb.
+  </div>
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhoto(event)">
+
+  <button class="btn-gallery" onclick="openGallery()">🖼️ Saját fotó feltöltése (Galéria)</button>
+  <input type="file" id="galleryInput" accept="image/*" style="display:none;" onchange="handlePhoto(event)">
 
   <div id="previewBox">
     <img id="capturedImage" src="" alt="Előnézet">
     <div id="statusText"></div>
     <div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+    <button class="btn-lens" onclick="openInLens()">🔎 Megnyitás Google Lens-ben (kézi felismerés)</button>
   </div>
 
   <input type="text" id="itemName" placeholder="2. Gép neve/modellje (a fotóból beíródik — javítható)">
-  <input type="number" id="itemPrice" placeholder="3. Tervezett eladási ár (Ft)">
+  <input type="number" id="itemPrice" placeholder="3. Tervezett eladási ár (Ft)" oninput="updatePriceEurHint()">
+  <div id="priceEurHint" style="color:#94a3b8; font-size:13px; margin-top:-4px; margin-bottom:6px; display:none;"></div>
 
   <div class="btn-row">
     <button onclick="search('jofogas')">🔍 Jófogás keresés</button>
@@ -126,6 +136,7 @@
     let currentEurRate = parseFloat(localStorage.getItem('savedEurRate')) || 400;
     let currentFilter = 'all';
     let pendingPhotoData = null; // dataURL of the just-taken photo, attached on save
+    let lastRawPhotoData = null; // full-size dataURL, used for "open in Lens"
     let editingIndex = null;
 
     document.getElementById('eurRateInput').value = currentEurRate;
@@ -154,10 +165,15 @@
       }
       // always re-render so a temporarily empty/invalid field doesn't break display
       renderList();
+      updatePriceEurHint();
     }
 
     function openCamera() {
       document.getElementById('cameraInput').click();
+    }
+
+    function openGallery() {
+      document.getElementById('galleryInput').click();
     }
 
     // Resize a dataURL image down to a small thumbnail so localStorage doesn't fill up
@@ -184,6 +200,39 @@
       });
     }
 
+    // Preprocess the photo before OCR: upscale, grayscale, boost contrast.
+    // This helps a lot on small, low-res label text photographed at an angle.
+    function preprocessForOcr(dataUrl) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          // upscale small photos so text has more pixels to work with
+          const scale = img.width < 900 ? 2 : 1;
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const d = imgData.data;
+          const contrast = 1.4; // >1 boosts contrast
+          for (let i = 0; i < d.length; i += 4) {
+            // grayscale
+            const gray = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+            // contrast around midpoint
+            let v = (gray - 128) * contrast + 128;
+            v = Math.max(0, Math.min(255, v));
+            d[i] = d[i + 1] = d[i + 2] = v;
+          }
+          ctx.putImageData(imgData, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      });
+    }
+
     async function handlePhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -192,6 +241,7 @@
       reader.onload = async function (e) {
         document.getElementById('capturedImage').src = e.target.result;
         document.getElementById('previewBox').style.display = 'block';
+        lastRawPhotoData = e.target.result;
 
         const status = document.getElementById('statusText');
         const progressWrap = document.getElementById('progressWrap');
@@ -204,7 +254,12 @@
         pendingPhotoData = await makeThumbnail(e.target.result);
 
         try {
-          const result = await Tesseract.recognize(e.target.result, 'hun+eng', {
+          const cleanedImage = await preprocessForOcr(e.target.result);
+
+          // Márka- és típusfeliratok (PARKSIDE, Bosch, DeWalt stb.) szinte mindig
+          // latin betűs angol/német szöveg, ezért csak 'eng' modellt használunk —
+          // a magyar szótár csak összezavarná a típusjeleket.
+          const result = await Tesseract.recognize(cleanedImage, 'eng', {
             logger: (m) => {
               if (m.status === 'recognizing text' && m.progress != null) {
                 progressBar.style.width = Math.round(m.progress * 100) + '%';
@@ -226,6 +281,43 @@
         }
       };
       reader.readAsDataURL(file);
+    }
+
+    // Nincs ingyenes, kulcs nélküli API, ami a fotót automatikusan elküldené a
+    // Google Lens-nek és visszaadná a felismert típust — ehhez fizetős Google
+    // Cloud Vision API kellene. Helyette a telefon natív megosztás-menüjén
+    // keresztül átadjuk a képet: ha a Google Lens app telepítve van, ott
+    // kiválasztható, és a felismert szöveget onnan kézzel bemásolhatod.
+    async function openInLens() {
+      if (!lastRawPhotoData) return alert("Előbb készíts vagy tölts fel egy fotót!");
+      try {
+        const res = await fetch(lastRawPhotoData);
+        const blob = await res.blob();
+        const file = new File([blob], 'cimke.jpg', { type: blob.type || 'image/jpeg' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Termék felismerés' });
+        } else {
+          alert("A böngésződ nem támogatja a közvetlen megosztást. Nyisd meg a Google Lens appot, és onnan válaszd ki a fotót a galériából.");
+        }
+      } catch (err) {
+        // a felhasználó megszakíthatja a megosztást — ez nem hiba
+        if (err && err.name !== 'AbortError') {
+          alert("Nem sikerült megnyitni a megosztást. Nyisd meg a Google Lens appot kézzel.");
+        }
+      }
+    }
+
+    function updatePriceEurHint() {
+      const priceFt = document.getElementById('itemPrice').value;
+      const hint = document.getElementById('priceEurHint');
+      if (priceFt && !isNaN(priceFt) && currentEurRate > 0) {
+        const eur = Math.round(priceFt / currentEurRate);
+        hint.innerText = `≈ ${eur} €`;
+        hint.style.display = 'block';
+      } else {
+        hint.style.display = 'none';
+      }
     }
 
     function search(type) {
@@ -276,6 +368,7 @@
       document.getElementById('itemPrice').value = "";
       document.getElementById('previewBox').style.display = 'none';
       pendingPhotoData = null;
+      updatePriceEurHint();
     }
 
     function editItem(index) {
@@ -285,6 +378,7 @@
       document.getElementById('itemPrice').value = item.priceFt === "?" ? "" : item.priceFt;
       editingIndex = index;
       document.querySelector('.btn-save').innerText = "💾 Módosítás mentése";
+      updatePriceEurHint();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -382,33 +476,4 @@
       a.href = url;
       a.download = 'szerszamok_' + new Date().toISOString().slice(0, 10) + '.json';
       document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    function importItems(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          const imported = JSON.parse(e.target.result);
-          if (!Array.isArray(imported)) throw new Error('invalid');
-          const existing = getItems();
-          setItems(existing.concat(imported));
-          renderList();
-          alert(`${imported.length} tétel importálva.`);
-        } catch (err) {
-          alert('A fájl nem érvényes JSON lista.');
-        }
-        event.target.value = '';
-      };
-      reader.readAsText(file);
-    }
-
-    initExchangeRate();
-    renderList();
-  </script>
-</body>
-</html>
+      a.click(
