@@ -9,7 +9,6 @@
     body { font-family: system-ui, sans-serif; background: #1e293b; color: white; padding: 15px; margin: 0; }
     h2 { color: #38bdf8; text-align: center; margin-top: 10px; margin-bottom: 8px; }
     h3 { margin-top: 25px; }
-
     .rate-box {
       background: #0f172a; padding: 10px; border-radius: 8px;
       text-align: center; margin-bottom: 15px; border: 1px solid #38bdf8;
@@ -21,13 +20,11 @@
       text-align: center; font-weight: bold; background: #334155;
       color: #38bdf8; border: 1px solid #38bdf8 !important;
     }
-
     input[type="text"], input[type="number"] {
       width: 100%; padding: 12px; margin: 6px 0; border-radius: 8px;
       border: none; box-sizing: border-box; font-size: 15px;
       background: #334155; color: white;
     }
-
     .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0; }
     .price-box { background: #334155; border-radius: 8px; padding: 10px 12px; }
     .price-box label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px; }
@@ -37,7 +34,6 @@
       font-weight: bold; padding: 4px 0; margin: 0; border-radius: 0;
     }
     .price-box input:focus { outline: none; border-bottom-color: #38bdf8; }
-
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     button {
       padding: 12px; border-radius: 8px; border: none; cursor: pointer;
@@ -46,29 +42,21 @@
     button:disabled { opacity: 0.5; cursor: default; }
     .btn-camera { background: #0284c7; font-size: 16px; padding: 14px; width: 100%; margin-bottom: 6px; }
     .btn-gallery { background: #334155; font-size: 15px; padding: 12px; width: 100%; margin-bottom: 10px; border: 1px solid #475569; }
-    .btn-save-photo { background: #0891b2; font-size: 15px; padding: 13px; width: 100%; margin-top: 8px; }
+    .btn-zoom { background: #0891b2; font-size: 15px; padding: 10px; width: 100%; margin-top: 8px; }
+    .btn-save-photo { background: #0f766e; font-size: 15px; padding: 13px; width: 100%; margin-top: 8px; }
     .btn-lens { background: #ea4335; font-size: 15px; padding: 13px; width: 100%; margin-top: 8px; }
     .btn-save { background: #059669; }
     .btn-export { background: #7c3aed; }
     .btn-import { background: #475569; }
-
     #previewBox {
       display: none; background: #0f172a; padding: 10px; border-radius: 8px;
-      text-align: center; margin-bottom: 15px; border: 1px solid #334155; position: relative;
+      text-align: center; margin-bottom: 15px; border: 1px solid #334155;
     }
     #capturedImage {
       max-width: 100%; max-height: 220px; border-radius: 6px;
-      cursor: zoom-in; transition: all 0.2s;
+      display: block; margin: 0 auto; cursor: pointer;
     }
     #statusText { color: #38bdf8; font-weight: bold; margin-top: 8px; font-size: 14px; }
-
-    .zoom-btn {
-      position: absolute; top: 14px; right: 14px;
-      background: rgba(0,0,0,0.6); color: white; border: none;
-      border-radius: 6px; padding: 6px 10px; font-size: 18px;
-      cursor: pointer; z-index: 10;
-    }
-
     #imageModal {
       display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%; background: rgba(0,0,0,0.92);
@@ -80,7 +68,6 @@
       max-width: 96vw; max-height: 80vh;
       border-radius: 8px; object-fit: contain;
       transition: transform 0.2s;
-      touch-action: none;
     }
     .modal-controls {
       display: flex; gap: 12px; margin-top: 14px; align-items: center;
@@ -91,12 +78,10 @@
     }
     .modal-btn.close-btn { background: #ef4444; font-size: 16px; padding: 10px 20px; }
     #zoomLevel { color: #94a3b8; font-size: 14px; min-width: 50px; text-align: center; }
-
     .lens-steps {
       background: #1e3a5f; border-radius: 8px; padding: 10px 12px;
       margin-top: 8px; font-size: 13px; color: #93c5fd; line-height: 1.8; text-align: left;
     }
-
     .list-item { background: #334155; padding: 12px; margin-top: 10px; border-radius: 8px; }
     .list-item.sold { opacity: 0.55; }
     .item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -116,14 +101,12 @@
     .icon-btn.edit { background: #f59e0b; }
     .icon-btn.sold-btn { background: #059669; }
     .icon-btn.del { background: #ef4444; }
-
     .top-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; margin-bottom: 6px; }
     #importFile { display: none; }
     .filter-row { display: flex; gap: 8px; margin-top: 12px; }
     .filter-row button { flex: 1; background: #334155; font-size: 13px; padding: 8px; }
     .filter-row button.active { background: #0284c7; }
     .empty-hint { color: #94a3b8; text-align: center; margin-top: 15px; font-size: 14px; }
-
     .hint-box {
       background: #0f172a; border: 1px solid #334155; border-radius: 8px;
       padding: 10px 12px; margin-bottom: 14px; font-size: 13px;
@@ -144,10 +127,10 @@
 
 <div class="hint-box">
   <b>📌 Hogyan használd:</b><br>
-  1. Fotózd le a szerszámot a telefonod kamerájával (ne az app kamera gombjával)<br>
-  2. Töltsd be a képet: <b>Fotó betöltése (Galéria)</b><br>
-  3. Nyomd meg: <b style="color:#0891b2;">💾 Fotó mentése a telefonra</b> (Letöltések mappába kerül)<br>
-  4. Nyomd meg: <b style="color:#ea4335;">🔎 Google Lens megnyitása</b> → töltsd fel a Letöltések mappából<br>
+  1. Fotózd le a szerszámot a telefonod kamerájával<br>
+  2. Töltsd be: <b>Fotó betöltése (Galéria)</b><br>
+  3. Nyomd meg: <b style="color:#0f766e;">💾 Fotó mentése a telefonra</b><br>
+  4. Nyomd meg: <b style="color:#ea4335;">🔎 Google Lens</b> → Letöltések mappából töltsd fel<br>
   5. Másold be a típust, add meg az árat → 💾 Mentés
 </div>
 
@@ -158,18 +141,18 @@
 <input type="file" id="galleryInput" accept="image/*" style="display:none;" onchange="handlePhoto(event)">
 
 <div id="previewBox">
-  <button class="zoom-btn" onclick="openModal()">🔍</button>
-  <img id="capturedImage" src="" alt="Előnézet" onclick="openModal()">
-  <div id="statusText"></div>
+  <img id="capturedImage" src="" alt="Előnézet">
+  <button class="btn-zoom" onclick="openModal()">🔍 Kép nagyítása</button>
   <button class="btn-save-photo" onclick="savePhotoToDevice()">💾 Fotó mentése a telefonra (Letöltések)</button>
   <button class="btn-lens" onclick="openGoogleLens()">🔎 Google Lens megnyitása (típus felismerés)</button>
   <div class="lens-steps">
     <b>Mit csinálj a Lens-ben:</b><br>
-    1. A Lens megnyílik → kattints a 🖼️ ikonra (kép feltöltése)<br>
+    1. A Lens megnyílik → kattints a 🖼️ ikonra<br>
     2. Válaszd a <b>Letöltések</b> mappát → keresd meg a mentett képet<br>
     3. A Lens megmutatja a szerszám típusát<br>
     4. Másold be ide lentebb a névmezőbe ⬇️
   </div>
+  <div id="statusText"></div>
 </div>
 
 <div id="imageModal" onclick="closeModalOutside(event)">
@@ -269,6 +252,7 @@
     document.getElementById('cameraInput').value = '';
     document.getElementById('cameraInput').click();
   }
+
   function openGallery() {
     document.getElementById('galleryInput').value = '';
     document.getElementById('galleryInput').click();
@@ -318,7 +302,7 @@
     a.click();
     document.body.removeChild(a);
     document.getElementById('statusText').innerText =
-      "✅ Fotó mentve a Letöltések mappába! Most nyomd meg a Google Lens gombot és töltsd fel onnan.";
+      "✅ Fotó mentve a Letöltések mappába! Most nyomd meg a Google Lens gombot.";
   }
 
   function openModal() {
@@ -348,7 +332,7 @@
   }
 
   function applyZoom() {
-    document.getElementById('modalImg').style.transform = `scale(${currentZoom})`;
+    document.getElementById('modalImg').style.transform = 'scale(' + currentZoom + ')';
     document.getElementById('zoomLevel').innerText = Math.round(currentZoom * 100) + '%';
   }
 
@@ -360,7 +344,7 @@
   function openGoogleLens() {
     window.open('https://images.google.com', '_blank');
     document.getElementById('statusText').innerText =
-      "🔎 Megnyílt! Kattints a 🔍 ikonra → Kép feltöltése → Letöltések mappa → válaszd ki a képet!";
+      "🔎 Megnyílt! Kattints a keresőikonra → Kép feltöltése → Letöltések mappa!";
   }
 
   function search(type) {
@@ -482,33 +466,31 @@
           ft = Math.round(parseFloat(eur) * currentEurRate);
         }
 
-        const priceHtml = `
-          <div class="item-price-ft">${ft !== "?" ? ft + ' Ft' : '— Ft'}</div>
-          <div class="item-price-eur">${eur !== "?" ? '≈ ' + eur + ' €' : '— €'}</div>
-        `;
+        const priceHtml =
+          '<div class="item-price-ft">' + (ft !== "?" ? ft + ' Ft' : '— Ft') + '</div>' +
+          '<div class="item-price-eur">' + (eur !== "?" ? '≈ ' + eur + ' €' : '— €') + '</div>';
 
         const thumbHtml = item.photo
-          ? `<img class="item-thumb" src="${item.photo}" alt=""
-               onclick="openModalWithSrc('${item.photo}')" title="Kattints a nagyításhoz">`
-          : `<div class="item-thumb-empty"></div>`;
+          ? '<img class="item-thumb" src="' + item.photo + '" alt="" onclick="openModalWithSrc(this.src)" title="Kattints a nagyításhoz">'
+          : '<div class="item-thumb-empty"></div>';
 
-        const soldTag = item.sold ? `<span class="sold-tag">Eladva</span>` : '';
+        const soldTag = item.sold ? '<span class="sold-tag">Eladva</span>' : '';
 
         const div = document.createElement('div');
         div.className = 'list-item' + (item.sold ? ' sold' : '');
-        div.innerHTML = `
-          <div class="item-top">
-            ${thumbHtml}
-            <div class="item-info">
-              <b>${escapeHtml(item.name)}${soldTag}</b>
-              ${priceHtml}
-            </div>
-            <div class="item-actions">
-              <button class="icon-btn edit"     onclick="editItem(${idx})">✏️</button>
-              <button class="icon-btn sold-btn" onclick="toggleSold(${idx})">${item.sold ? '↩️' : '✅'}</button>
-              <button class="icon-btn del"      onclick="deleteItem(${idx})">🗑️</button>
-            </div>
-          </div>`;
+        div.innerHTML =
+          '<div class="item-top">' +
+            thumbHtml +
+            '<div class="item-info">' +
+              '<b>' + escapeHtml(item.name) + soldTag + '</b>' +
+              priceHtml +
+            '</div>' +
+            '<div class="item-actions">' +
+              '<button class="icon-btn edit" onclick="editItem(' + idx + ')">✏️</button>' +
+              '<button class="icon-btn sold-btn" onclick="toggleSold(' + idx + ')">' + (item.sold ? '↩️' : '✅') + '</button>' +
+              '<button class="icon-btn del" onclick="deleteItem(' + idx + ')">🗑️</button>' +
+            '</div>' +
+          '</div>';
         container.appendChild(div);
       });
   }
