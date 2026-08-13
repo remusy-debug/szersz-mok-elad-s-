@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Szerszám Eladó Segéd</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #1e293b; color: white; padding: 15px; }
+    h2 { color: #38bdf8; text-align: center; }
+    input, textarea { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    button { padding: 10px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; background: #0284c7; color: white; }
+    .list-item { background: #334155; padding: 10px; margin-top: 10px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+
+  <h2>🛠 Szerszám Eladási Segéd</h2>
+  
+  <input type="text" id="itemName" placeholder="Mi a gép neve/modellje? (pl. Bosch GBH 2-26)">
+  <input type="number" id="itemPrice" placeholder="Mennyiért hirdeted? (Ft)">
+  
+  <div class="btn-row">
+    <button onclick="search('jofogas')">Jófogás keresés</button>
+    <button onclick="search('bazos')">Bazos.sk keresés</button>
+    <button onclick="search('google')">Google (Árak)</button>
+    <button onclick="saveItem()" style="background: #059669;">Mentés a listába</button>
+  </div>
+
+  <h3 style="margin-top:20px;">📋 Eladásra váró cuccok:</h3>
+  <div id="itemList"></div>
+
+  <script>
+    function search(type) {
+      const name = document.getElementById('itemName').value;
+      if (!name) return alert("Írj be valamit!");
+      
+      let url = "";
+      if (type === 'jofogas') url = "https://www.jofogas.hu/magyarorszag?q=" + encodeURIComponent(name);
+      if (type === 'bazos') url = "https://www.bazos.sk/search.php?hledat=" + encodeURIComponent(name);
+      if (type === 'google') url = "https://www.google.com/search?q=" + encodeURIComponent(name + " eladó ár");
+      
+      window.open(url, '_blank');
+    }
+
+    function saveItem() {
+      const name = document.getElementById('itemName').value;
+      const price = document.getElementById('itemPrice').value;
+      if (!name) return;
+
+      const items = JSON.parse(localStorage.getItem('myTools') || "[]");
+      items.push({name, price});
+      localStorage.setItem('myTools', JSON.stringify(items));
+      location.reload();
+    }
+
+    // Lista betöltése
+    const items = JSON.parse(localStorage.getItem('myTools') || "[]");
+    items.forEach(item => {
+      document.getElementById('itemList').innerHTML += 
+        `<div class="list-item"><b>${item.name}</b> - ${item.price} Ft</div>`;
+    });
+  </script>
+</body>
+</html>
