@@ -504,7 +504,8 @@
     URL.revokeObjectURL(url);
   }
 
-  function importItems(event) {
+  
+    function importItems(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -514,11 +515,13 @@
         if (!Array.isArray(imported)) return alert("Érvénytelen fájl!");
         setItems([...getItems(), ...imported]);
         renderList();
-                alert(`${imported.length} tétel importálva!`);
-      } catch(err) { alert("Hiba az importáláskor!"); }
+        alert(imported.length + " tétel sikeresen importálva!");
+      } catch(err) {
+        alert("Hiba az importálás során: " + err.message);
+      }
     };
     reader.readAsText(file);
-    event.target.value = '';
+    event.target.value = "";
   }
 </script>
 </body>
