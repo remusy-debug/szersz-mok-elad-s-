@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Szerszám Eladó Segéd</title>
+  <!-- Automatikus szövegfelismerő kövtár -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     body { font-family: system-ui, sans-serif; background: #1e293b; color: white; padding: 15px; margin: 0; }
     h2 { color: #38bdf8; text-align: center; margin-top: 10px; margin-bottom: 8px; }
     
-    /* Árfolyam doboz stílusa */
     .rate-box { 
       background: #0f172a; 
       padding: 10px; 
@@ -37,10 +38,10 @@
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     button { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; background: #0284c7; color: white; font-size: 14px; }
     .btn-camera { background: #0284c7; font-size: 16px; padding: 14px; width: 100%; margin-bottom: 10px; }
-    .btn-lens { background: #ea580c; width: 100%; margin-top: 8px; }
     .btn-save { background: #059669; }
     #previewBox { display: none; background: #0f172a; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; border: 1px solid #334155; }
     #capturedImage { max-width: 100%; max-height: 250px; border-radius: 6px; }
+    #statusText { color: #38bdf8; font-weight: bold; margin-top: 8px; font-size: 14px; }
     .list-item { background: #334155; padding: 12px; margin-top: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
@@ -48,24 +49,21 @@
 
   <h2>🛠 Szerszám Eladó Segéd</h2>
 
-  <!-- Kézzel módosítható árfolyam doboz -->
   <div class="rate-box">
     <span>💶 Árfolyam: <b>1 € =</b></span>
     <input type="number" id="eurRateInput" class="rate-input" value="400" oninput="changeRate(this.value)">
     <span><b>Ft</b></span>
   </div>
 
-  <!-- Kamera gomb es rejtett input -->
   <button class="btn-camera" onclick="openCamera()">📷 1. Fotó készítése (Kamera)</button>
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhoto(event)">
 
-  <!-- Fénykép előnézet doboz -->
   <div id="previewBox">
     <img id="capturedImage" src="" alt="Előnézet">
-    <button class="btn-lens" onclick="openLens()">🔍 Keresés Google Lens-szel</button>
+    <div id="statusText"></div>
   </div>
 
-  <input type="text" id="itemName" placeholder="2. Gép neve/modellje (pl. Bosch GBH 2-26)">
+  <input type="text" id="itemName" placeholder="2. Gép neve/modellje (a fotóból beíródik)">
   <input type="number" id="itemPrice" placeholder="3. Tervezett eladási ár (Ft)">
   
   <div class="btn-row">
@@ -81,10 +79,8 @@
   <script>
     let currentEurRate = parseFloat(localStorage.getItem('savedEurRate')) || 400;
 
-    // Kezdő érték beállítása a beviteli mezőben
     document.getElementById('eurRateInput').value = currentEurRate;
 
-    // Élő árfolyam lekérése csak alapértelmezettként, ha még nem mentettél sajátot
     async function initExchangeRate() {
       if (!localStorage.getItem('savedEurRate')) {
         try {
@@ -96,12 +92,11 @@
             renderList();
           }
         } catch (e) {
-          console.log("Árfolyam lekérési hiba, alapértelmezett 400 Ft");
+          console.log("Árfolyam lekérési hiba");
         }
       }
     }
 
-    // Amikor a felhasználó átírja az árfolyamot
     function changeRate(val) {
       const newRate = parseFloat(val);
       if (newRate && newRate > 0) {
@@ -115,26 +110,39 @@
       document.getElementById('cameraInput').click();
     }
 
-    function handlePhoto(event) {
+    async function handlePhoto(event) {
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = async function(e) {
           document.getElementById('capturedImage').src = e.target.result;
           document.getElementById('previewBox').style.display = 'block';
+          
+          const status = document.getElementById('statusText');
+          status.innerText = "⏳ Szöveg olvasása a fotóról...";
+
+          try {
+            // Fotó automatikus szövegelemzése
+            const result = await Tesseract.recognize(e.target.result, 'eng');
+            const detectedText = result.data.text.trim().replace(/\n+/g, ' ');
+
+            if (detectedText.length > 0) {
+              document.getElementById('itemName').value = detectedText;
+              status.innerText = "✅ Típus automatikusan beírva!";
+            } else {
+              status.innerText = "⚠️ Nem sikerült kiolvasni, kérlek igazítsd meg a fotót.";
+            }
+          } catch (err) {
+            status.innerText = "⚠️ Hiba a beolvasáskor.";
+          }
         };
         reader.readAsDataURL(file);
       }
     }
 
-    function openLens() {
-  window.location.href = "https://images.google.com/";
-    }
-    
-
     function search(type) {
       const name = document.getElementById('itemName').value;
-      if (!name) return alert("Kérlek írd be a gép nevét vagy modelljét!");
+      if (!name) return alert("Kérlek írd be vagy fotózd le a gép nevét!");
       
       let url = "";
       if (type === 'jofogas') url = "https://www.jofogas.hu/magyarorszag?q=" + encodeURIComponent(name);
@@ -150,7 +158,7 @@
       if (!name) return alert("Írd be a gép nevét!");
 
       const items = JSON.parse(localStorage.getItem('myTools') || "[]");
-      items.push({ name, priceFt: priceFt || "?" });
+      items.push({ name: name, priceFt: priceFt || "?" });
       localStorage.setItem('myTools', JSON.stringify(items));
       renderList();
       
@@ -193,3 +201,4 @@
   </script>
 </body>
 </html>
+
