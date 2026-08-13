@@ -46,6 +46,7 @@
     button:disabled { opacity: 0.5; cursor: default; }
     .btn-camera { background: #0284c7; font-size: 16px; padding: 14px; width: 100%; margin-bottom: 6px; }
     .btn-gallery { background: #334155; font-size: 15px; padding: 12px; width: 100%; margin-bottom: 10px; border: 1px solid #475569; }
+    .btn-save-photo { background: #0891b2; font-size: 15px; padding: 13px; width: 100%; margin-top: 8px; }
     .btn-lens { background: #ea4335; font-size: 15px; padding: 13px; width: 100%; margin-top: 8px; }
     .btn-save { background: #059669; }
     .btn-export { background: #7c3aed; }
@@ -143,10 +144,11 @@
 
 <div class="hint-box">
   <b>📌 Hogyan használd:</b><br>
-  1. Fotózd le a szerszámot / típuscímkét<br>
-  2. Nyomd meg: <b style="color:#ea4335;">🔎 Google Lens megnyitása</b><br>
-  3. A Lens-ben töltsd fel a képet → felismeri a típust<br>
-  4. Másold be a típust, add meg az árat → 💾 Mentés
+  1. Fotózd le a szerszámot a telefonod kamerájával (ne az app kamera gombjával)<br>
+  2. Töltsd be a képet: <b>Fotó betöltése (Galéria)</b><br>
+  3. Nyomd meg: <b style="color:#0891b2;">💾 Fotó mentése a telefonra</b> (Letöltések mappába kerül)<br>
+  4. Nyomd meg: <b style="color:#ea4335;">🔎 Google Lens megnyitása</b> → töltsd fel a Letöltések mappából<br>
+  5. Másold be a típust, add meg az árat → 💾 Mentés
 </div>
 
 <button class="btn-camera" onclick="openCamera()">📷 Fotó készítése (Kamera)</button>
@@ -159,11 +161,12 @@
   <button class="zoom-btn" onclick="openModal()">🔍</button>
   <img id="capturedImage" src="" alt="Előnézet" onclick="openModal()">
   <div id="statusText"></div>
+  <button class="btn-save-photo" onclick="savePhotoToDevice()">💾 Fotó mentése a telefonra (Letöltések)</button>
   <button class="btn-lens" onclick="openGoogleLens()">🔎 Google Lens megnyitása (típus felismerés)</button>
   <div class="lens-steps">
     <b>Mit csinálj a Lens-ben:</b><br>
     1. A Lens megnyílik → kattints a 🖼️ ikonra (kép feltöltése)<br>
-    2. Válaszd ki a galériából az imént készített képet<br>
+    2. Válaszd a <b>Letöltések</b> mappát → keresd meg a mentett képet<br>
     3. A Lens megmutatja a szerszám típusát<br>
     4. Másold be ide lentebb a névmezőbe ⬇️
   </div>
@@ -218,6 +221,7 @@
   let currentEurRate = parseFloat(localStorage.getItem('savedEurRate')) || 400;
   let currentFilter = 'all';
   let pendingPhotoData = null;
+  let fullPhotoData = null;
   let editingIndex = null;
   let currentZoom = 1;
 
@@ -292,13 +296,29 @@
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async function(e) {
+      fullPhotoData = e.target.result;
       document.getElementById('capturedImage').src = e.target.result;
       document.getElementById('modalImg').src = e.target.result;
       document.getElementById('previewBox').style.display = 'block';
-      document.getElementById('statusText').innerText = "✅ Fotó betöltve! Nyomd meg a Google Lens gombot, vagy kattints a képre a nagyításhoz.";
+      document.getElementById('statusText').innerText = "✅ Fotó betöltve! Mentsd a telefonra, majd nyisd meg a Google Lens-t.";
       pendingPhotoData = await makeThumbnail(e.target.result);
     };
     reader.readAsDataURL(file);
+  }
+
+  function savePhotoToDevice() {
+    if (!fullPhotoData) {
+      alert("Előbb készíts vagy tölts be fotót!");
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = fullPhotoData;
+    a.download = 'szerszam_' + Date.now() + '.jpg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    document.getElementById('statusText').innerText =
+      "✅ Fotó mentve a Letöltések mappába! Most nyomd meg a Google Lens gombot és töltsd fel onnan.";
   }
 
   function openModal() {
@@ -340,7 +360,7 @@
   function openGoogleLens() {
     window.open('https://images.google.com', '_blank');
     document.getElementById('statusText').innerText =
-      "🔎 Megnyílt! Kattints a 🔍 ikonra → Kép feltöltése → válaszd ki a fotót!";
+      "🔎 Megnyílt! Kattints a 🔍 ikonra → Kép feltöltése → Letöltések mappa → válaszd ki a képet!";
   }
 
   function search(type) {
@@ -388,6 +408,7 @@
     document.getElementById('itemPriceEur').value = "";
     document.getElementById('previewBox').style.display = 'none';
     pendingPhotoData = null;
+    fullPhotoData = null;
   }
 
   function editItem(index) {
@@ -504,8 +525,7 @@
     URL.revokeObjectURL(url);
   }
 
-  
-    function importItems(event) {
+  function importItems(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
