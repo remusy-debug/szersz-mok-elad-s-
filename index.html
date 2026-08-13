@@ -68,7 +68,6 @@
       cursor: pointer; z-index: 10;
     }
 
-    /* Nagyítós modal */
     #imageModal {
       display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%; background: rgba(0,0,0,0.92);
@@ -90,9 +89,7 @@
       padding: 10px 18px; font-size: 20px; cursor: pointer; font-weight: bold;
     }
     .modal-btn.close-btn { background: #ef4444; font-size: 16px; padding: 10px 20px; }
-    #zoomLevel {
-      color: #94a3b8; font-size: 14px; min-width: 50px; text-align: center;
-    }
+    #zoomLevel { color: #94a3b8; font-size: 14px; min-width: 50px; text-align: center; }
 
     .lens-steps {
       background: #1e3a5f; border-radius: 8px; padding: 10px 12px;
@@ -102,10 +99,7 @@
     .list-item { background: #334155; padding: 12px; margin-top: 10px; border-radius: 8px; }
     .list-item.sold { opacity: 0.55; }
     .item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .item-thumb {
-      width: 52px; height: 52px; object-fit: cover; border-radius: 6px;
-      flex-shrink: 0; cursor: zoom-in;
-    }
+    .item-thumb { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; flex-shrink: 0; cursor: zoom-in; }
     .item-thumb-empty { width: 52px; height: 52px; border-radius: 6px; flex-shrink: 0; background: #1e293b; }
     .item-info { flex: 1; min-width: 0; }
     .item-info b { display: block; word-break: break-word; font-size: 15px; }
@@ -175,7 +169,6 @@
   </div>
 </div>
 
-<!-- Nagyítós modal -->
 <div id="imageModal" onclick="closeModalOutside(event)">
   <img id="modalImg" src="" alt="Nagyított kép">
   <div class="modal-controls">
@@ -232,7 +225,6 @@
   renderList();
   initExchangeRate();
 
-  // ── Árfolyam ──────────────────────────────────────────
   async function initExchangeRate() {
     if (!localStorage.getItem('savedEurRate')) {
       try {
@@ -256,7 +248,6 @@
     renderList();
   }
 
-  // ── Ár szinkron ───────────────────────────────────────
   function syncPrices(source) {
     if (currentEurRate <= 0) return;
     if (source === 'ft') {
@@ -270,7 +261,6 @@
     }
   }
 
-  // ── Fotó ──────────────────────────────────────────────
   function openCamera() {
     document.getElementById('cameraInput').value = '';
     document.getElementById('cameraInput').click();
@@ -311,7 +301,6 @@
     reader.readAsDataURL(file);
   }
 
-  // ── Nagyítós modal ────────────────────────────────────
   function openModal() {
     currentZoom = 1;
     applyZoom();
@@ -343,20 +332,17 @@
     document.getElementById('zoomLevel').innerText = Math.round(currentZoom * 100) + '%';
   }
 
-  // Lista elemek képének nagyítása
   function openModalWithSrc(src) {
     document.getElementById('modalImg').src = src;
     openModal();
   }
 
-  // ── Google Lens ───────────────────────────────────────
   function openGoogleLens() {
-  window.open('https://images.google.com', '_blank');
-  document.getElementById('statusText').innerText =
-    "🔎 Megnyílt! Kattints a 🔍 ikonra a keresőben → Kép feltöltése → válaszd ki a fotót!";
+    window.open('https://images.google.com', '_blank');
+    document.getElementById('statusText').innerText =
+      "🔎 Megnyílt! Kattints a 🔍 ikonra → Kép feltöltése → válaszd ki a fotót!";
   }
 
-  // ── Keresés ───────────────────────────────────────────
   function search(type) {
     const name = document.getElementById('itemName').value;
     if (!name) return alert("Írd be a gép nevét!");
@@ -367,13 +353,11 @@
     window.open(url, '_blank');
   }
 
-  // ── LocalStorage ─────────────────────────────────────
   function getItems() { return JSON.parse(localStorage.getItem('myTools') || "[]"); }
   function setItems(items) { localStorage.setItem('myTools', JSON.stringify(items)); }
 
-  // ── Mentés ────────────────────────────────────────────
   function saveItem() {
-    const name = document.getElementById('itemName').value.trim();
+    const name     = document.getElementById('itemName').value.trim();
     const priceFt  = document.getElementById('itemPriceFt').value;
     const priceEur = document.getElementById('itemPriceEur').value;
     if (!name) return alert("Írd be a gép nevét!");
@@ -406,7 +390,6 @@
     pendingPhotoData = null;
   }
 
-  // ── Szerkesztés ───────────────────────────────────────
   function editItem(index) {
     const item = getItems()[index];
     document.getElementById('itemName').value = item.name;
@@ -436,7 +419,6 @@
     renderList();
   }
 
-  // ── Szűrő ─────────────────────────────────────────────
   function setFilter(f) {
     currentFilter = f;
     ['All','Active','Sold'].forEach(k =>
@@ -446,14 +428,12 @@
     renderList();
   }
 
-  // ── HTML escape ───────────────────────────────────────
   function escapeHtml(str) {
     const d = document.createElement('div');
     d.textContent = str;
     return d.innerHTML;
   }
 
-  // ── Lista renderelés ──────────────────────────────────
   function renderList() {
     const items = getItems();
     const container = document.getElementById('itemList');
@@ -471,7 +451,6 @@
         return true;
       })
       .forEach(({ item, idx }) => {
-        // Ár megjelenítés — ha régi adat csak priceFt-vel jött, számítsuk az EUR-t
         let ft  = item.priceFt;
         let eur = item.priceEur;
 
@@ -508,4 +487,31 @@
               <button class="icon-btn sold-btn" onclick="toggleSold(${idx})">${item.sold ? '↩️' : '✅'}</button>
               <button class="icon-btn del"      onclick="deleteItem(${idx})">🗑️</button>
             </div>
-  
+          </div>`;
+        container.appendChild(div);
+      });
+  }
+
+  function exportItems() {
+    const blob = new Blob([JSON.stringify(getItems(), null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = 'szerszamok_' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function importItems(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (!Array.isArray(imported)) return alert("Érvénytelen fájl!");
+        setItems([...getItems(), ...imported]);
+        renderList();
+        alert(`${imported.length}
