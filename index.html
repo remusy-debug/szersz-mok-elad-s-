@@ -5,35 +5,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Szerszám Eladó Segéd</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #1e293b; color: white; padding: 15px; }
-    h2 { color: #38bdf8; text-align: center; }
-    input, textarea { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; }
+    body { font-family: system-ui, sans-serif; background: #1e293b; color: white; padding: 15px; margin: 0; }
+    h2 { color: #38bdf8; text-align: center; margin-top: 10px; margin-bottom: 15px; }
+    input { width: 100%; padding: 12px; margin: 6px 0; border-radius: 8px; border: none; box-sizing: border-box; font-size: 15px; }
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    button { padding: 10px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; background: #0284c7; color: white; }
-    .list-item { background: #334155; padding: 10px; margin-top: 10px; border-radius: 8px; }
+    button { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; background: #0284c7; color: white; font-size: 14px; }
+    .btn-camera { background: #0284c7; font-size: 16px; padding: 14px; width: 100%; margin-bottom: 10px; }
+    .btn-lens { background: #ea580c; width: 100%; margin-top: 8px; }
+    .btn-save { background: #059669; }
+    #previewBox { display: none; background: #0f172a; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; border: 1px solid #334155; }
+    #capturedImage { max-width: 100%; max-height: 250px; border-radius: 6px; }
+    .list-item { background: #334155; padding: 12px; margin-top: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
 
-  <h2>🛠 Szerszám Eladási Segéd</h2>
-  
-  <input type="text" id="itemName" placeholder="Mi a gép neve/modellje? (pl. Bosch GBH 2-26)">
-  <input type="number" id="itemPrice" placeholder="Mennyiért hirdeted? (Ft)">
-  
-  <div class="btn-row">
-    <button onclick="search('jofogas')">Jófogás keresés</button>
-    <button onclick="search('bazos')">Bazos.sk keresés</button>
-    <button onclick="search('google')">Google (Árak)</button>
-    <button onclick="saveItem()" style="background: #059669;">Mentés a listába</button>
+  <h2>🛠 Szerszám Eladó Segéd</h2>
+
+  <!-- Kamera gomb es rejtett input -->
+  <button class="btn-camera" onclick="openCamera()">📷 1. Fotó készítése (Kamera)</button>
+  <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhoto(event)">
+
+  <!-- Fénykép előnézet doboz -->
+  <div id="previewBox">
+    <img id="capturedImage" src="" alt="Előnézet">
+    <button class="btn-lens" onclick="openLens()">🔍 Keresés Google Lens-szel</button>
   </div>
 
-  <h3 style="margin-top:20px;">📋 Eladásra váró cuccok:</h3>
+  <input type="text" id="itemName" placeholder="2. Gép neve/modellje (pl. Bosch GBH 2-26)">
+  <input type="number" id="itemPrice" placeholder="3. Tervezett eladási ár (Ft)">
+  
+  <div class="btn-row">
+    <button onclick="search('jofogas')">🔍 Jófogás keresés</button>
+    <button onclick="search('bazos')">🔍 Bazos.sk keresés</button>
+    <button onclick="search('google')">🔍 Google árak</button>
+    <button class="btn-save" onclick="saveItem()">💾 Mentés a listába</button>
+  </div>
+
+  <h3 style="margin-top:25px;">📋 Eladásra váró cuccok:</h3>
   <div id="itemList"></div>
 
   <script>
+    function openCamera() {
+      document.getElementById('cameraInput').click();
+    }
+
+    function handlePhoto(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('capturedImage').src = e.target.result;
+          document.getElementById('previewBox').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function openLens() {
+      window.open("https://lens.google.com/", "_blank");
+    }
+
     function search(type) {
       const name = document.getElementById('itemName').value;
-      if (!name) return alert("Írj be valamit!");
+      if (!name) return alert("Kérlek írd be a gép nevét vagy modelljét!");
       
       let url = "";
       if (type === 'jofogas') url = "https://www.jofogas.hu/magyarorszag?q=" + encodeURIComponent(name);
@@ -46,20 +81,39 @@
     function saveItem() {
       const name = document.getElementById('itemName').value;
       const price = document.getElementById('itemPrice').value;
-      if (!name) return;
+      if (!name) return alert("Írd be a gép nevét!");
 
       const items = JSON.parse(localStorage.getItem('myTools') || "[]");
-      items.push({name, price});
+      items.push({name, price: price || "?"});
       localStorage.setItem('myTools', JSON.stringify(items));
-      location.reload();
+      renderList();
+      
+      document.getElementById('itemName').value = "";
+      document.getElementById('itemPrice').value = "";
+      document.getElementById('previewBox').style.display = 'none';
     }
 
-    // Lista betöltése
-    const items = JSON.parse(localStorage.getItem('myTools') || "[]");
-    items.forEach(item => {
-      document.getElementById('itemList').innerHTML += 
-        `<div class="list-item"><b>${item.name}</b> - ${item.price} Ft</div>`;
-    });
+    function renderList() {
+      const items = JSON.parse(localStorage.getItem('myTools') || "[]");
+      const container = document.getElementById('itemList');
+      container.innerHTML = "";
+      items.forEach((item, index) => {
+        container.innerHTML += `
+          <div class="list-item">
+            <span><b>${item.name}</b> — ${item.price} Ft</span>
+            <button onclick="deleteItem(${index})" style="background:#ef4444; padding:6px 10px; font-size:12px;">X</button>
+          </div>`;
+      });
+    }
+
+    function deleteItem(index) {
+      const items = JSON.parse(localStorage.getItem('myTools') || "[]");
+      items.splice(index, 1);
+      localStorage.setItem('myTools', JSON.stringify(items));
+      renderList();
+    }
+
+    renderList();
   </script>
 </body>
 </html>
