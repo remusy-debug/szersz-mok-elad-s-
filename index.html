@@ -419,7 +419,7 @@
           if (currentFilter === 'active') return !item.sold;
           if (currentFilter === 'sold') return !!item.sold;
           return true;
-        });
+        })
 
       if (items.length === 0) {
         emptyHint.style.display = 'block';
@@ -476,4 +476,7 @@
       a.href = url;
       a.download = 'szerszamok_' + new Date().toISOString().slice(0, 10) + '.json';
       document.body.appendChild(a);
-      a.click(
+          a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    }
