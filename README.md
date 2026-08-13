@@ -1,0 +1,1 @@
+# szersz-mok-elad-s-
