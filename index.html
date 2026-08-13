@@ -514,4 +514,12 @@
         if (!Array.isArray(imported)) return alert("Érvénytelen fájl!");
         setItems([...getItems(), ...imported]);
         renderList();
-        alert(`${imported.length}
+                alert(`${imported.length} tétel importálva!`);
+      } catch(err) { alert("Hiba az importáláskor!"); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+</script>
+</body>
+</html>
